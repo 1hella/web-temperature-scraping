@@ -1,12 +1,15 @@
 import requests
 import selectorlib
 import time
+import sqlite3
 
 URL = "http://programmer100.pythonanywhere.com/"
 HEADERS = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 '
                   'Safari/537.36'
 }
+
+connection = sqlite3.connect("data.db")
 
 
 def scrape(url):
@@ -22,14 +25,10 @@ def extract(source):
     return value
 
 
-def store(data):
-    with open("data.txt", "a") as file:
-        file.write(data + "\n")
-
-
-def read():
-    with open("data.txt", "r") as file:
-        return file.read()
+def store(timestamp, temp):
+    cursor = connection.cursor()
+    cursor.execute("INSERT INTO temperatures values (?,?)", (timestamp, temp))
+    connection.commit()
 
 
 if __name__ == "__main__":
@@ -37,9 +36,6 @@ if __name__ == "__main__":
         scraped = scrape(URL)
         temp = extract(scraped)
         timestamp = time.strftime("%Y-%m-%d-%H-%M-%S")
-        formatted = f"{timestamp},{temp}"
-        print(formatted)
-        store(formatted)
+        print(timestamp, temp)
+        store(timestamp, temp)
         time.sleep(2)
-
-# assume data.txt exists with headers and there's no data in it, or if there is, append data to it.
